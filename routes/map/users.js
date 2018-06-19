@@ -2,8 +2,8 @@ var express = require('express');
 var router = express.Router();
 // 导入MySQL模块
 var mysql = require('mysql');
-var dbConfig = require('../db/DBConfig');
-var userSQL = require('../db/Usersql');
+var dbConfig = require('../../db/DBConfig');
+var userSQL = require('../../db/usersql');
 // 使用DBConfig.js的配置信息创建一个MySQL连接池
 var pool = mysql.createPool( dbConfig.mysql );
 // 响应一个JSON数据
@@ -15,7 +15,7 @@ var responseJSON = function (res, ret) {
         res.json(ret);
     }};
 // 添加用户
-router.get('/addUser', function(req, res, next){
+router.post('/addUser', function(req, res, next){
     // 从连接池获取连接
     pool.getConnection(function(err, connection) {
 // 获取前台页面传过来的参数
@@ -39,13 +39,11 @@ router.get('/addUser', function(req, res, next){
     });
 });
 // 查询用户
-router.get('/getUser', function(req, res, next){
+router.get('/getAllUser', function(req, res, next){
     // 从连接池获取连接
     pool.getConnection(function(err, connection) {
-// 获取前台页面传过来的参数
-        var param = req.query || req.params;
 // 建立连接 增加一个用户信息
-        connection.query(userSQL.getUserById ,[], function(err, result) {
+        connection.query(userSQL.queryAll , function(err, result) {
             let data = {}
             if(result) {
                 data = {
@@ -54,8 +52,51 @@ router.get('/getUser', function(req, res, next){
                     list:result
                 }
             }
-            data
-            console.log(data)
+            // 以json形式，把操作结果返回给前台页面
+            responseJSON(res, data);
+
+            // 释放连接
+            connection.release();
+
+        });
+    });
+});
+
+// 根据id查询用户
+router.post('/getUser', function(req, res, next){
+    // 从连接池获取连接
+    pool.getConnection(function(err, connection) {
+// 获取前台页面传过来的参数
+        var param = req.body;
+// 建立连接 增加一个用户信息
+        if(param.uid == ''){
+            connection.query(userSQL.queryAll , function(err, result) {
+                let data = {}
+                if(result) {
+                    data = {
+                        code: 200,
+                        msg:'查询成功',
+                        list:result
+                    }
+                }
+                // 以json形式，把操作结果返回给前台页面
+                responseJSON(res, data);
+
+                // 释放连接
+                connection.release();
+
+            });
+            return false
+        }
+        connection.query(userSQL.getUserById ,[param.uid], function(err, result) {
+            let data = {}
+            if(result) {
+                data = {
+                    code: 200,
+                    msg:'查询成功',
+                    list:result
+                }
+            }
             // 以json形式，把操作结果返回给前台页面
             responseJSON(res, data);
 
