@@ -68,27 +68,14 @@ router.post('/getUser', function(req, res, next){
     pool.getConnection(function(err, connection) {
 // 获取前台页面传过来的参数
         var param = req.body;
+        let sql = userSQL.getUserById;
+        let parameter = [param.uid]
 // 建立连接 增加一个用户信息
         if(param.uid == ''){
-            connection.query(userSQL.queryAll , function(err, result) {
-                let data = {}
-                if(result) {
-                    data = {
-                        code: 200,
-                        msg:'查询成功',
-                        list:result
-                    }
-                }
-                // 以json形式，把操作结果返回给前台页面
-                responseJSON(res, data);
-
-                // 释放连接
-                connection.release();
-
-            });
-            return false
+            sql = userSQL.queryAll;
+            parameter = []
         }
-        connection.query(userSQL.getUserById ,[param.uid], function(err, result) {
+        connection.query(sql ,parameter, function(err, result) {
             let data = {}
             if(result) {
                 data = {
